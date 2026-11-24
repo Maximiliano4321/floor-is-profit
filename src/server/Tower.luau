@@ -21,6 +21,37 @@ local beam: Beam? = nil
 local beamTop: Attachment? = nil
 local beamBottom: Attachment? = nil
 local groupsReady = false
+local anchor = Vector3.zero
+
+local function chooseAnchor(existing: Instance?): Vector3
+	if existing then
+		local x = existing:GetAttribute("CenterX")
+		local z = existing:GetAttribute("CenterZ")
+		if type(x) == "number" and type(z) == "number" then
+			return Vector3.new(x, 0, z)
+		end
+	end
+	for _, player in game:GetService("Players"):GetPlayers() do
+		local character = player.Character
+		local hrp = character and character:FindFirstChild("HumanoidRootPart")
+		if hrp and hrp:IsA("BasePart") then
+			return Vector3.new(hrp.Position.X, 0, hrp.Position.Z)
+		end
+	end
+	local spawn = workspace:FindFirstChildWhichIsA("SpawnLocation", true)
+	if spawn and spawn:IsA("BasePart") then
+		return Vector3.new(spawn.Position.X, 0, spawn.Position.Z)
+	end
+	return Vector3.zero
+end
+
+function Tower.getAnchor(): Vector3
+	return anchor
+end
+
+local function at(x: number, y: number, z: number): Vector3
+	return Vector3.new(anchor.X + x, y, anchor.Z + z)
+end
 
 local PAY_SOUND = "rbxasset://sounds/electronicpingshort.wav"
 local WARN_SOUND = "rbxasset://sounds/button.wav"
@@ -128,7 +159,7 @@ local function buildFloorSpawn(parent: Instance)
 	spawn.Duration = 0
 	spawn.AllowTeamChangeOnTouch = false
 	spawn.Size = Vector3.new(12, 1, 12)
-	spawn.Position = Vector3.new(0, top + 0.5, 0)
+	spawn.Position = at(0, top + 0.5, 0)
 	spawn.Parent = parent
 end
 
@@ -287,7 +318,7 @@ local function buildSideline(parent: Instance)
 	pad.Name = "Pad"
 	pad.Anchored = true
 	pad.Size = Vector3.new(22, 1, 22)
-	pad.Position = Vector3.new(78, 46, 0)
+	pad.Position = at(78, 46, 0)
 	pad.Color = Color3.fromRGB(28, 30, 40)
 	pad.Material = Enum.Material.SmoothPlastic
 	pad.TopSurface = Enum.SurfaceType.Smooth
@@ -307,10 +338,10 @@ local function buildSideline(parent: Instance)
 	end
 
 	-- Glass box so eliminated players can watch. CanQuery is off so the camera looks through it.
-	wall("Far", Vector3.new(1, 8, 22), Vector3.new(89, 50.5, 0))
-	wall("Near", Vector3.new(1, 8, 22), Vector3.new(67, 50.5, 0))
-	wall("North", Vector3.new(22, 8, 1), Vector3.new(78, 50.5, 11))
-	wall("South", Vector3.new(22, 8, 1), Vector3.new(78, 50.5, -11))
+	wall("Far", Vector3.new(1, 8, 22), at(89, 50.5, 0))
+	wall("Near", Vector3.new(1, 8, 22), at(67, 50.5, 0))
+	wall("North", Vector3.new(22, 8, 1), at(78, 50.5, 11))
+	wall("South", Vector3.new(22, 8, 1), at(78, 50.5, -11))
 
 	local sign = makeLabel(pad, "OUT THIS ROUND")
 	sign.Text = "OUT THIS ROUND"
@@ -323,7 +354,7 @@ local function buildKillPlane(parent: Instance)
 	plane.Anchored = true
 	plane.CanCollide = true
 	plane.Size = Vector3.new(600, 2, 600)
-	plane.Position = Vector3.new(0, Config.KillY - 8, 0)
+	plane.Position = at(0, Config.KillY - 8, 0)
 	plane.Color = Color3.fromRGB(40, 8, 14)
 	plane.Material = Enum.Material.SmoothPlastic
 	plane.Transparency = 0.15
@@ -342,7 +373,7 @@ local function buildSpine(parent: Instance)
 	spine.Transparency = 0.35
 	spine.Size = Vector3.new(0.6, top, 0.6)
 	local edge = Config.FloorSize.X / 2 + 3
-	spine.Position = Vector3.new(-edge, top / 2, -edge)
+	spine.Position = at(-edge, top / 2, -edge)
 	spine.Parent = parent
 end
 
@@ -356,7 +387,7 @@ end
 
 function Tower.withinColumn(position: Vector3): boolean
 	local half = Config.FloorSize.X / 2 + Config.ColumnMargin
-	return math.abs(position.X) <= half and math.abs(position.Z) <= half
+	return math.abs(position.X - anchor.X) <= half and math.abs(position.Z - anchor.Z) <= half
 end
 
 local function lipColor(color: Color3): Color3
@@ -400,8 +431,15 @@ function Tower.build(onKillTouch: (BasePart) -> ())
 	visualToken += 1
 	table.clear(floors)
 
+	local previous = workspace:FindFirstChild("Tower")
+	anchor = chooseAnchor(previous)
+
 	local tower = Instance.new("Model")
 	tower.Name = "Tower"
+	tower:SetAttribute("CenterX", anchor.X)
+	tower:SetAttribute("CenterZ", anchor.Z)
+	-- In the world before labels, lights, or collision setup can fail.
+	tower.Parent = workspace
 
 	buildSpine(tower)
 
@@ -419,11 +457,13 @@ function Tower.build(onKillTouch: (BasePart) -> ())
 		body.CanQuery = false
 		body.Size = Vector3.new(Config.FloorSize.X, Config.FloorSize.Y, Config.FloorSize.Z)
 		body.Color = color
-		body.Material = Enum.Material.SmoothPlastic
+		body.Material = Enum.Material.Neon
+		body.Transparency = 0
 		body.TopSurface = Enum.SurfaceType.Smooth
 		body.BottomSurface = Enum.SurfaceType.Smooth
-		body.Position = Vector3.new(0, top - (Config.FloorSize.Y / 2), 0)
+		body.Position = at(0, top - (Config.FloorSize.Y / 2), 0)
 		body.Parent = model
+		model.Parent = tower
 
 		local trim = Instance.new("Part")
 		trim.Name = "Trim"
@@ -433,7 +473,7 @@ function Tower.build(onKillTouch: (BasePart) -> ())
 		trim.Material = Enum.Material.Neon
 		trim.Color = color
 		trim.Size = Vector3.new(Config.FloorSize.X + 1.4, 0.28, Config.FloorSize.Z + 1.4)
-		trim.Position = Vector3.new(0, top - 0.2, 0)
+		trim.Position = at(0, top - 0.2, 0)
 		trim.Parent = model
 
 		local pad = Instance.new("Part")
@@ -442,7 +482,7 @@ function Tower.build(onKillTouch: (BasePart) -> ())
 		pad.CanQuery = false
 		pad.Transparency = 1
 		pad.Size = Vector3.new(Config.FloorSize.X, Config.PadThickness, Config.FloorSize.Z)
-		pad.Position = Vector3.new(0, top - (Config.PadThickness / 2), 0)
+		pad.Position = at(0, top - (Config.PadThickness / 2), 0)
 		pad.Parent = model
 
 		local half = Config.FloorSize.X / 2
@@ -451,10 +491,10 @@ function Tower.build(onKillTouch: (BasePart) -> ())
 		local reach = half + (lipWidth / 2)
 		local role = if index == 1 then "ground" elseif index == 2 then "step" else "ghost"
 		local lips = {
-			makeLip(model, "LipNorth", Vector3.new(Config.FloorSize.X + lipWidth * 2, Config.LipThickness, lipWidth), Vector3.new(0, lipY, reach), color),
-			makeLip(model, "LipSouth", Vector3.new(Config.FloorSize.X + lipWidth * 2, Config.LipThickness, lipWidth), Vector3.new(0, lipY, -reach), color),
-			makeLip(model, "LipEast", Vector3.new(lipWidth, Config.LipThickness, Config.FloorSize.Z), Vector3.new(reach, lipY, 0), color),
-			makeLip(model, "LipWest", Vector3.new(lipWidth, Config.LipThickness, Config.FloorSize.Z), Vector3.new(-reach, lipY, 0), color),
+			makeLip(model, "LipNorth", Vector3.new(Config.FloorSize.X + lipWidth * 2, Config.LipThickness, lipWidth), at(0, lipY, reach), color),
+			makeLip(model, "LipSouth", Vector3.new(Config.FloorSize.X + lipWidth * 2, Config.LipThickness, lipWidth), at(0, lipY, -reach), color),
+			makeLip(model, "LipEast", Vector3.new(lipWidth, Config.LipThickness, Config.FloorSize.Z), at(reach, lipY, 0), color),
+			makeLip(model, "LipWest", Vector3.new(lipWidth, Config.LipThickness, Config.FloorSize.Z), at(-reach, lipY, 0), color),
 		}
 		applyCatch(pad, role)
 		for _, lip in lips do
@@ -509,10 +549,6 @@ function Tower.build(onKillTouch: (BasePart) -> ())
 		end
 	end)
 
-	-- Parent the finished model before removing the previous one, so Play
-	-- never has an empty Workspace while the next tower is assembled.
-	tower.Parent = workspace
-	local previous = root
 	root = tower
 	if previous and previous ~= tower then
 		previous:Destroy()

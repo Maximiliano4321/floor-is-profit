@@ -113,11 +113,13 @@ local function standCFrame(player: Player, floorIndex: number): CFrame
 	local slot = player.UserId % 6
 	local angle = (slot / 6) * math.pi * 2
 	local top = Config.topY(floorIndex)
-	return CFrame.new(math.cos(angle) * 6, top + 4, math.sin(angle) * 6)
+	local spot = Tower.getAnchor()
+	return CFrame.new(spot.X + math.cos(angle) * 6, top + 4, spot.Z + math.sin(angle) * 6)
 end
 
 local function spectatorCFrame(): CFrame
-	return CFrame.lookAt(Vector3.new(78, 52, 0), Vector3.new(0, 36, 0))
+	local spot = Tower.getAnchor()
+	return CFrame.lookAt(spot + Vector3.new(78, 52, 0), spot + Vector3.new(0, 36, 0))
 end
 
 local function applyDesired(player: Player): boolean

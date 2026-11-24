@@ -90,7 +90,7 @@ src/client/ProductButtons.luau
 
 `src/server` syncs as a Script under ServerScriptService. `src/client` syncs as a LocalScript under StarterPlayerScripts. `src/shared` syncs into ReplicatedStorage.
 
-Play leaves character loading on, builds `Workspace.Tower`, and spawns you on the red floor. The camera follows your character. The pay, warn, and drop loop starts from there.
+Play leaves character loading on. Eight neon floors are parented to `Workspace.Tower` immediately, centered on the spawn, before the rest of the server starts. The camera follows your character. The pay, warn, and drop loop starts from floor 1.
 
 ## Timing
 

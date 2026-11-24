@@ -5,7 +5,7 @@
 
 local Config = {
 	FloorCount = 8,
-	FloorSize = Vector3.new(40, 1.8, 40),
+	FloorSize = Vector3.new(96, 4, 96),
 	PadThickness = 0.3,
 	-- Extra landing surface around the pad. Narrow enough that a player
 	-- standing on it is still inside the column that counts as on the floor.

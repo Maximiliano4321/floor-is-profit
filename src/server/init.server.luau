@@ -5,6 +5,54 @@ local Players = game:GetService("Players")
 Players.CharacterAutoLoads = true
 Players.RespawnTime = 2.5
 
+-- The gameplay builder parents its model only after modules load. These
+-- eight parts are in Workspace first, around the spawn, so Play is never
+-- an empty baseplate if that builder fails.
+local function showStartupFloors()
+	workspace.StreamingEnabled = false
+	local center = Vector3.zero
+	local spawn = workspace:FindFirstChildWhichIsA("SpawnLocation", true)
+	if spawn and spawn:IsA("BasePart") then
+		center = Vector3.new(spawn.Position.X, 0, spawn.Position.Z)
+	end
+	local existing = workspace:FindFirstChild("Tower")
+	if existing then
+		existing:Destroy()
+	end
+
+	local colors = {
+		Color3.fromRGB(255, 20, 40),
+		Color3.fromRGB(255, 95, 0),
+		Color3.fromRGB(255, 230, 0),
+		Color3.fromRGB(20, 255, 70),
+		Color3.fromRGB(0, 255, 230),
+		Color3.fromRGB(30, 90, 255),
+		Color3.fromRGB(200, 30, 255),
+		Color3.fromRGB(255, 200, 0),
+	}
+	local tower = Instance.new("Model")
+	tower.Name = "Tower"
+	tower:SetAttribute("CenterX", center.X)
+	tower:SetAttribute("CenterZ", center.Z)
+	local size = Vector3.new(96, 4, 96)
+	for index = 1, 8 do
+		local top = 10 + (index - 1) * 9
+		local part = Instance.new("Part")
+		part.Name = "Floor" .. tostring(index)
+		part.Anchored = true
+		part.CanCollide = true
+		part.Material = Enum.Material.Neon
+		part.Color = colors[index]
+		part.Transparency = 0
+		part.Size = size
+		part.Position = Vector3.new(center.X, top - (size.Y / 2), center.Z)
+		part.Parent = tower
+	end
+	tower.Parent = workspace
+end
+
+showStartupFloors()
+
 local Remotes = require(script:WaitForChild("Remotes"))
 local Cash = require(script:WaitForChild("Cash"))
 local Products = require(script:WaitForChild("Products"))
