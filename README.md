@@ -94,6 +94,8 @@ src/client/ProductButtons.luau
 
 Floor 1 is short on purpose: about 3.5 seconds, then the payout, a jump warning, then the drop. Spawn, cash, the fall, and the jump should all happen within the first 20 seconds of Play, after the character appears.
 
+The first time you catch a tower at its start, a hint sits under the top panel for 15 seconds: jump up when it says jump, and don't fall. Joining after those 15 seconds waits until the next tower.
+
 Floors 2–7 wait 30 seconds, pay everyone still on that floor, warn for about 3 seconds, then drop. Use **Skip wait** if you want to reach the jackpot without standing through every cycle.
 
 ## What still needs Studio

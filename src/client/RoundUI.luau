@@ -32,6 +32,11 @@ local nextTowerNumber: TextLabel? = nil
 local jackpotBanner: Frame? = nil
 local jackpotAmount: TextLabel? = nil
 local jackpotScale: UIScale? = nil
+local hintBanner: Frame? = nil
+local hintTowerStart: number? = nil
+local hintFinished = false
+
+local HINT_SECONDS = 15
 
 local function setText(label: TextLabel?, text: string)
 	if label then
@@ -60,6 +65,35 @@ local function applySnapshot(value)
 	if floorLabel and typeof(value.color) == "Color3" then
 		floorLabel.TextColor3 = value.color
 	end
+end
+
+local function showHint(): boolean
+	if hintFinished or not snapshot then
+		return false
+	end
+	local startedAt = snapshot.startedAt
+	if type(startedAt) ~= "number" or startedAt <= 0 then
+		return false
+	end
+	local elapsed = workspace:GetServerTimeNow() - startedAt
+	if elapsed < 0 then
+		elapsed = 0
+	end
+	if hintTowerStart == nil then
+		if elapsed > HINT_SECONDS then
+			return false
+		end
+		hintTowerStart = startedAt
+	end
+	if startedAt ~= hintTowerStart then
+		hintFinished = true
+		return false
+	end
+	if elapsed > HINT_SECONDS then
+		hintFinished = true
+		return false
+	end
+	return true
 end
 
 local function render()
@@ -129,6 +163,10 @@ local function render()
 		if nextTower then
 			nextTowerNumber.Text = seconds
 		end
+	end
+
+	if hintBanner then
+		hintBanner.Visible = showHint()
 	end
 
 	if jackpotBanner and jackpotAmount and jackpotScale then
@@ -413,6 +451,33 @@ function RoundUI.start(remoteBundle)
 		position = UDim2.fromOffset(0, 186),
 		size = UDim2.new(1, 0, 0, 28),
 	})
+
+	hintBanner = Instance.new("Frame")
+	hintBanner.Name = "Hint"
+	hintBanner.AnchorPoint = Vector2.new(0.5, 0)
+	hintBanner.Position = UDim2.new(0.5, 0, 0, 184)
+	hintBanner.Size = UDim2.fromOffset(560, 78)
+	hintBanner.BackgroundColor3 = Color3.fromRGB(18, 10, 8)
+	hintBanner.BackgroundTransparency = 0.08
+	hintBanner.BorderSizePixel = 0
+	hintBanner.Visible = false
+	hintBanner.Parent = gui
+	corner(hintBanner, 14)
+	local hintStroke = Instance.new("UIStroke")
+	hintStroke.Thickness = 4
+	hintStroke.Color = Color3.fromRGB(255, 214, 90)
+	hintStroke.Parent = hintBanner
+	local hintText = label({
+		parent = hintBanner,
+		text = "JUMP UP WHEN IT SAYS JUMP.\nDON'T FALL.",
+		font = Enum.Font.GothamBlack,
+		textSize = 22,
+		color = Color3.new(1, 1, 1),
+		position = UDim2.fromOffset(16, 8),
+		size = UDim2.new(1, -32, 1, -16),
+	})
+	hintText.TextWrapped = true
+	hintText.TextYAlignment = Enum.TextYAlignment.Center
 
 	jackpotBanner = Instance.new("Frame")
 	jackpotBanner.Name = "JackpotBanner"

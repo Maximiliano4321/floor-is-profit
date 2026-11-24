@@ -29,6 +29,7 @@ local state = {
 
 local lastSnapshot = nil
 local towerNumber = 1
+local towerStartedAt = 0
 
 local function countAlive(): number
 	local total = 0
@@ -79,6 +80,7 @@ local function broadcast(phase: string, floorIndex: number, duration: number, me
 		payout = Config.payoutFor(floorIndex, towerNumber),
 		jackpot = Config.Jackpot,
 		tower = towerNumber,
+		startedAt = towerStartedAt,
 		message = message,
 		alive = countAlive(),
 		color = Tower.colorOf(floorIndex),
@@ -502,6 +504,8 @@ local function runRound()
 		task.wait(2)
 		return
 	end
+
+	towerStartedAt = workspace:GetServerTimeNow()
 
 	local reachedTop = false
 	for floorIndex = 1, Config.FloorCount - 1 do
