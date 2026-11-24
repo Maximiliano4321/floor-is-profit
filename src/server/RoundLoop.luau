@@ -203,6 +203,7 @@ local function eliminate(player: Player)
 	placeSpectator(player)
 
 	cashPopup(player, "loss", lost)
+	Tower.playFall(player)
 	if lost > 0 then
 		toast(player, "Lost " .. Config.formatCash(lost) .. " from this round. Lifetime cash stays on the leaderboard.")
 	else

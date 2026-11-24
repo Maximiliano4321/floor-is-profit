@@ -24,6 +24,7 @@ local groupsReady = false
 local PAY_SOUND = "rbxasset://sounds/electronicpingshort.wav"
 local WARN_SOUND = "rbxasset://sounds/button.wav"
 local DROP_SOUND = "rbxasset://sounds/uuhhh.wav"
+local FALL_SOUND = "rbxasset://sounds/hit.wav"
 local WIN_SOUND = "rbxasset://sounds/victory.wav"
 
 local function ensureGroup(name: string)
@@ -76,6 +77,15 @@ function Tower.applyGroup(character: Model, groupName: string)
 			descendant.CollisionGroup = groupName
 		end
 	end
+end
+
+local function playGlobal(soundId: string, volume: number)
+	local sound = Instance.new("Sound")
+	sound.SoundId = soundId
+	sound.Volume = volume
+	sound.Parent = SoundService
+	sound:Play()
+	Debris:AddItem(sound, 4)
 end
 
 local function playAt(parent: Instance, soundId: string, volume: number)
@@ -560,7 +570,21 @@ function Tower.celebratePay(index: number)
 	paint(floor, gold)
 	floor.highlight.FillColor = gold
 	floor.highlight.FillTransparency = 0.45
-	playAt(floor.body, PAY_SOUND, 0.7)
+	playGlobal(PAY_SOUND, 0.85)
+end
+
+function Tower.playFall(player: Player)
+	local gui = player:FindFirstChild("PlayerGui")
+	if not gui then
+		return
+	end
+	local sound = Instance.new("Sound")
+	sound.Name = "Fell"
+	sound.SoundId = FALL_SOUND
+	sound.Volume = 1
+	sound.Parent = gui
+	sound:Play()
+	Debris:AddItem(sound, 4)
 end
 
 function Tower.drop(index: number)
