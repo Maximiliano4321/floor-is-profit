@@ -202,11 +202,11 @@ local function eliminate(player: Player)
 	Products.syncTrail(player)
 	placeSpectator(player)
 
+	cashPopup(player, "loss", lost)
 	if lost > 0 then
-		cashPopup(player, "loss", lost)
 		toast(player, "Lost " .. Config.formatCash(lost) .. " from this round. Lifetime cash stays on the leaderboard.")
 	else
-		toast(player, "You fell. You're out until the next tower.")
+		toast(player, "You fell. You're out until the next tower. Lifetime cash stays.")
 	end
 
 	local _, humanoid = characterParts(player)
