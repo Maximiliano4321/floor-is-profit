@@ -13,20 +13,27 @@ local function corner(parent: Instance)
 	ui.Parent = parent
 end
 
-local function makeButton(parent: Instance, text: string, layoutOrder: number): TextButton
+local function makeButton(parent: Instance, text: string, layoutOrder: number, color: Color3): TextButton
 	local button = Instance.new("TextButton")
 	button.Name = text
 	button.LayoutOrder = layoutOrder
-	button.Size = UDim2.new(1, 0, 0, 36)
-	button.BackgroundColor3 = Color3.fromRGB(28, 30, 40)
+	button.Size = UDim2.new(1, 0, 0, 48)
+	button.BackgroundColor3 = color
 	button.AutoButtonColor = true
-	button.Font = Enum.Font.GothamBold
-	button.TextSize = 14
+	button.Font = Enum.Font.GothamBlack
+	button.TextSize = 16
 	button.TextColor3 = Color3.new(1, 1, 1)
+	button.TextStrokeTransparency = 0.4
+	button.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 	button.Text = text
 	button.BorderSizePixel = 0
 	button.Parent = parent
 	corner(button)
+	local stroke = Instance.new("UIStroke")
+	stroke.Name = "Edge"
+	stroke.Thickness = 3
+	stroke.Color = Color3.new(1, 1, 1)
+	stroke.Parent = button
 	return button
 end
 
@@ -42,7 +49,7 @@ function ProductButtons.start(remoteBundle)
 	panel.Name = "Panel"
 	panel.AnchorPoint = Vector2.new(1, 0.5)
 	panel.Position = UDim2.new(1, -12, 0.5, 0)
-	panel.Size = UDim2.fromOffset(210, 214)
+	panel.Size = UDim2.fromOffset(230, 286)
 	panel.BackgroundColor3 = Color3.fromRGB(14, 14, 20)
 	panel.BackgroundTransparency = 0.15
 	panel.Parent = gui
@@ -75,12 +82,15 @@ function ProductButtons.start(remoteBundle)
 	header.TextYAlignment = Enum.TextYAlignment.Center
 	header.Parent = panel
 
-	local life = makeButton(panel, "Second Life", 2)
-	local double = makeButton(panel, "2x Next Floor", 3)
-	local trail = makeButton(panel, "Survivor Trail", 4)
-	local skip = makeButton(panel, "Skip wait", 5)
-	skip.BackgroundColor3 = Color3.fromRGB(36, 32, 28)
-	skip.TextColor3 = Color3.fromRGB(255, 196, 120)
+	local life = makeButton(panel, "Second Life", 2, Color3.fromRGB(16, 170, 78))
+	local double = makeButton(panel, "2x Next Floor", 3, Color3.fromRGB(230, 140, 0))
+	local trail = makeButton(panel, "Survivor Trail", 4, Color3.fromRGB(140, 50, 230))
+	local skip = makeButton(panel, "Skip wait", 5, Color3.fromRGB(48, 42, 36))
+	skip.TextColor3 = Color3.fromRGB(255, 210, 150)
+	local skipEdge = skip:FindFirstChild("Edge")
+	if skipEdge and skipEdge:IsA("UIStroke") then
+		skipEdge.Color = Color3.fromRGB(120, 96, 70)
+	end
 
 	local function fire(productId: string)
 		remoteBundle.ProductRequest:FireServer(productId)
@@ -105,13 +115,13 @@ function ProductButtons.start(remoteBundle)
 		local trailOn = player:GetAttribute("TrailOn") == true
 
 		life.Text = if charges > 0 then string.format("Second Life  x%d", charges) else "Second Life"
-		life.BackgroundColor3 = if charges > 0 then Color3.fromRGB(24, 64, 40) else Color3.fromRGB(28, 30, 40)
+		life.BackgroundColor3 = if charges > 0 then Color3.fromRGB(20, 210, 100) else Color3.fromRGB(16, 170, 78)
 
-		double.Text = if armed then "2x Next Floor  ARMED" else "2x Next Floor"
-		double.BackgroundColor3 = if armed then Color3.fromRGB(64, 52, 18) else Color3.fromRGB(28, 30, 40)
+		double.Text = if armed then "2x Next Floor  ON" else "2x Next Floor"
+		double.BackgroundColor3 = if armed then Color3.fromRGB(255, 186, 20) else Color3.fromRGB(230, 140, 0)
 
 		trail.Text = if trailOn then "Survivor Trail  ON" else "Survivor Trail"
-		trail.BackgroundColor3 = if trailOn then Color3.fromRGB(48, 36, 72) else Color3.fromRGB(28, 30, 40)
+		trail.BackgroundColor3 = if trailOn then Color3.fromRGB(180, 90, 255) else Color3.fromRGB(140, 50, 230)
 	end
 
 	for _, attribute in { "SecondLifeCharges", "DoubleNext", "TrailOn" } do

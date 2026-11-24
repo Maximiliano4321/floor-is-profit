@@ -9,9 +9,9 @@ local CashPopup = {}
 
 local STYLES = {
 	pay = {
-		color = Color3.fromRGB(120, 255, 150),
+		color = Color3.fromRGB(80, 255, 120),
 		prefix = "+",
-		subtitle = nil,
+		subtitle = "PAID",
 	},
 	double = {
 		color = Color3.fromRGB(255, 220, 80),
@@ -44,63 +44,83 @@ local function popup(kind: string, amount: number)
 	local frame = Instance.new("Frame")
 	frame.Name = "CashPopup"
 	frame.AnchorPoint = Vector2.new(0.5, 0.5)
-	frame.BackgroundTransparency = 1
-	frame.Size = UDim2.fromOffset(420, 120)
-	frame.Position = UDim2.new(0.5, (index % 2) * 18 - 9, 0.42, (index % 3) * 8)
+	frame.BackgroundColor3 = Color3.fromRGB(8, 10, 14)
+	frame.BackgroundTransparency = 0
+	frame.BorderSizePixel = 0
+	frame.Size = UDim2.fromOffset(480, 168)
+	frame.Position = UDim2.new(0.5, 0, 0.38, (index % 3) * 10)
+	frame.ZIndex = 5
 	frame.Parent = layer
 
+	local cardCorner = Instance.new("UICorner")
+	cardCorner.CornerRadius = UDim.new(0, 18)
+	cardCorner.Parent = frame
+
+	local cardStroke = Instance.new("UIStroke")
+	cardStroke.Thickness = 5
+	cardStroke.Color = style.color
+	cardStroke.Parent = frame
+
 	local scale = Instance.new("UIScale")
-	scale.Scale = 0.35
+	scale.Scale = 0.4
 	scale.Parent = frame
 
 	local title = Instance.new("TextLabel")
 	title.BackgroundTransparency = 1
-	title.Size = UDim2.new(1, 0, 0, 28)
-	title.Font = Enum.Font.GothamBold
-	title.TextSize = 18
+	title.Size = UDim2.new(1, 0, 0, 32)
+	title.Position = UDim2.fromOffset(0, 14)
+	title.Font = Enum.Font.GothamBlack
+	title.TextSize = 22
 	title.TextColor3 = style.color
-	title.Text = style.subtitle or ""
+	title.Text = style.subtitle or "CASH"
+	title.ZIndex = 6
 	title.Parent = frame
 
 	local amountLabel = Instance.new("TextLabel")
 	amountLabel.BackgroundTransparency = 1
-	amountLabel.Position = UDim2.fromOffset(0, 24)
-	amountLabel.Size = UDim2.new(1, 0, 0, 72)
+	amountLabel.Position = UDim2.fromOffset(0, 48)
+	amountLabel.Size = UDim2.new(1, 0, 0, 96)
 	amountLabel.Font = Enum.Font.GothamBlack
-	amountLabel.TextSize = 64
+	amountLabel.TextSize = 84
 	amountLabel.TextColor3 = style.color
 	amountLabel.Text = style.prefix .. Config.formatCash(amount)
+	amountLabel.ZIndex = 6
 	amountLabel.Parent = frame
 
 	local stroke = Instance.new("UIStroke")
-	stroke.Thickness = 2.5
-	stroke.Color = Color3.fromRGB(8, 8, 12)
+	stroke.Thickness = 2
+	stroke.Color = Color3.fromRGB(0, 0, 0)
 	stroke.Parent = amountLabel
 
 	TweenService:Create(scale, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 		Scale = 1,
 	}):Play()
 
-	task.delay(0.35, function()
+	task.delay(1.15, function()
 		if not frame.Parent then
 			return
 		end
-		local rise = TweenService:Create(frame, TweenInfo.new(0.9, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			Position = frame.Position - UDim2.fromOffset(0, 80),
+		local rise = TweenService:Create(frame, TweenInfo.new(0.7, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Position = frame.Position - UDim2.fromOffset(0, 70),
+			BackgroundTransparency = 1,
 		})
-		local fade = TweenService:Create(amountLabel, TweenInfo.new(0.9), {
+		local fade = TweenService:Create(amountLabel, TweenInfo.new(0.7), {
 			TextTransparency = 1,
 		})
-		local fadeTitle = TweenService:Create(title, TweenInfo.new(0.9), {
+		local fadeTitle = TweenService:Create(title, TweenInfo.new(0.7), {
 			TextTransparency = 1,
 		})
-		local fadeStroke = TweenService:Create(stroke, TweenInfo.new(0.9), {
+		local fadeStroke = TweenService:Create(stroke, TweenInfo.new(0.7), {
+			Transparency = 1,
+		})
+		local fadeCard = TweenService:Create(cardStroke, TweenInfo.new(0.7), {
 			Transparency = 1,
 		})
 		rise:Play()
 		fade:Play()
 		fadeTitle:Play()
 		fadeStroke:Play()
+		fadeCard:Play()
 		fade.Completed:Once(function()
 			frame:Destroy()
 		end)

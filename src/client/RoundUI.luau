@@ -18,6 +18,8 @@ local jackpotLabel: TextLabel? = nil
 local messageLabel: TextLabel? = nil
 local toastLabel: TextLabel? = nil
 local callout: TextLabel? = nil
+local calloutSub: TextLabel? = nil
+local calloutBanner: Frame? = nil
 local calloutScale: UIScale? = nil
 local panelStroke: UIStroke? = nil
 
@@ -77,8 +79,8 @@ local function render()
 		setText(timerLabel, "PAID")
 		setText(captionLabel, "Cash in")
 	elseif phase == "warn" then
-		setText(timerLabel, seconds)
-		setText(captionLabel, "Then it drops")
+		setText(timerLabel, "JUMP")
+		setText(captionLabel, "UP — floor drops in " .. seconds)
 	elseif phase == "drop" then
 		setText(timerLabel, "DOWN")
 		setText(captionLabel, "Jump")
@@ -94,19 +96,26 @@ local function render()
 	end
 
 	local showCallout = phase == "warn" or phase == "drop" or phase == "jackpot"
-	if callout and calloutScale then
-		callout.Visible = showCallout
+	if callout and calloutBanner and calloutScale then
+		calloutBanner.Visible = showCallout
 		if phase == "warn" then
+			local pulse = math.sin(os.clock() * 14) > 0
 			callout.Text = "JUMP UP"
-			callout.TextColor3 = Color3.fromRGB(255, 70, 78)
-			calloutScale.Scale = 1 + math.sin(os.clock() * 9) * 0.06
+			callout.TextColor3 = if pulse then Color3.fromRGB(255, 255, 255) else Color3.fromRGB(255, 230, 40)
+			calloutBanner.BackgroundColor3 = if pulse then Color3.fromRGB(220, 0, 30) else Color3.fromRGB(120, 0, 16)
+			setText(calloutSub, "THE FLOOR IS DROPPING")
+			calloutScale.Scale = if pulse then 1.08 else 0.96
 		elseif phase == "drop" then
 			callout.Text = "FALLING"
-			callout.TextColor3 = Color3.fromRGB(255, 150, 64)
+			callout.TextColor3 = Color3.fromRGB(255, 255, 255)
+			calloutBanner.BackgroundColor3 = Color3.fromRGB(180, 60, 0)
+			setText(calloutSub, "GET ON THE NEXT FLOOR")
 			calloutScale.Scale = 1
 		elseif phase == "jackpot" then
 			callout.Text = "JACKPOT"
-			callout.TextColor3 = Color3.fromRGB(255, 206, 72)
+			callout.TextColor3 = Color3.fromRGB(255, 220, 60)
+			calloutBanner.BackgroundColor3 = Color3.fromRGB(40, 24, 0)
+			setText(calloutSub, "TOP FLOOR SPLITS IT")
 			calloutScale.Scale = 1 + math.sin(os.clock() * 6) * 0.04
 		end
 	end
@@ -226,22 +235,44 @@ function RoundUI.start(remoteBundle)
 	toastLabel.TextWrapped = true
 	toastLabel.TextYAlignment = Enum.TextYAlignment.Top
 
+	calloutBanner = Instance.new("Frame")
+	calloutBanner.Name = "JumpBanner"
+	calloutBanner.AnchorPoint = Vector2.new(0.5, 0.5)
+	calloutBanner.Position = UDim2.fromScale(0.5, 0.62)
+	calloutBanner.Size = UDim2.fromOffset(640, 150)
+	calloutBanner.BackgroundColor3 = Color3.fromRGB(220, 0, 30)
+	calloutBanner.BorderSizePixel = 0
+	calloutBanner.Visible = false
+	calloutBanner.Parent = gui
+	corner(calloutBanner, 16)
+	local bannerStroke = Instance.new("UIStroke")
+	bannerStroke.Thickness = 6
+	bannerStroke.Color = Color3.fromRGB(255, 255, 255)
+	bannerStroke.Parent = calloutBanner
+	calloutScale = Instance.new("UIScale")
+	calloutScale.Parent = calloutBanner
 	callout = label({
-		parent = gui,
+		parent = calloutBanner,
 		text = "JUMP UP",
 		font = Enum.Font.GothamBlack,
-		textSize = 72,
-		color = Color3.fromRGB(255, 70, 78),
-		position = UDim2.new(0.5, -260, 0.58, 0),
-		size = UDim2.fromOffset(520, 84),
+		textSize = 78,
+		color = Color3.new(1, 1, 1),
+		position = UDim2.fromOffset(0, 18),
+		size = UDim2.new(1, 0, 0, 82),
 	})
-	callout.Visible = false
-	local calloutStroke = Instance.new("UIStroke")
-	calloutStroke.Thickness = 3
-	calloutStroke.Color = Color3.fromRGB(10, 10, 14)
-	calloutStroke.Parent = callout
-	calloutScale = Instance.new("UIScale")
-	calloutScale.Parent = callout
+	local calloutTextStroke = Instance.new("UIStroke")
+	calloutTextStroke.Thickness = 3
+	calloutTextStroke.Color = Color3.fromRGB(40, 0, 0)
+	calloutTextStroke.Parent = callout
+	calloutSub = label({
+		parent = calloutBanner,
+		text = "THE FLOOR IS DROPPING",
+		font = Enum.Font.GothamBlack,
+		textSize = 22,
+		color = Color3.new(1, 1, 1),
+		position = UDim2.fromOffset(0, 102),
+		size = UDim2.new(1, 0, 0, 28),
+	})
 
 	remoteBundle.RoundState.OnClientEvent:Connect(applySnapshot)
 	remoteBundle.Toast.OnClientEvent:Connect(function(message)

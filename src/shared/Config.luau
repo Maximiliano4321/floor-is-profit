@@ -33,14 +33,14 @@ local Config = {
 	ColumnMargin = 2.5,
 
 	FloorColors = {
-		Color3.fromRGB(255, 64, 72),
-		Color3.fromRGB(255, 138, 32),
-		Color3.fromRGB(255, 214, 48),
-		Color3.fromRGB(64, 214, 96),
-		Color3.fromRGB(32, 206, 204),
-		Color3.fromRGB(56, 140, 255),
-		Color3.fromRGB(176, 84, 255),
-		Color3.fromRGB(255, 196, 48),
+		Color3.fromRGB(255, 20, 40),
+		Color3.fromRGB(255, 95, 0),
+		Color3.fromRGB(255, 230, 0),
+		Color3.fromRGB(20, 255, 70),
+		Color3.fromRGB(0, 255, 230),
+		Color3.fromRGB(30, 90, 255),
+		Color3.fromRGB(200, 30, 255),
+		Color3.fromRGB(255, 200, 0),
 	},
 
 	Products = {

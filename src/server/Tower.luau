@@ -420,17 +420,25 @@ function Tower.setActive(current: number, phase: string)
 		end
 
 		local ghost = role == "ghost"
-		floor.body.Transparency = if ghost then 0.55 else 0
-		floor.trim.Transparency = if ghost then 0.55 else 0
-		floor.body.Material = if role == "ground" or (phase == "warn" and role == "step")
-			then Enum.Material.Neon
-			else Enum.Material.SmoothPlastic
+		local warningThis = phase == "warn" and floor.index == current
+		floor.body.Transparency = if ghost then 0.4 else 0
+		floor.trim.Transparency = if ghost then 0.4 else 0
+		floor.body.Material = if ghost then Enum.Material.SmoothPlastic else Enum.Material.Neon
+		floor.trim.Material = Enum.Material.Neon
 		paint(floor, floor.baseColor)
-		floor.light.Enabled = role == "ground" or (phase == "warn" and role == "step")
-		floor.light.Brightness = if role == "ground" then 2.2 else 1.2
+		floor.light.Enabled = not ghost
+		floor.light.Brightness = if role == "ground" then 5 else 3
+		floor.light.Range = 40
 		floor.label.Text = labelText(floor.index, phase, current)
+		floor.label.TextColor3 = Color3.new(1, 1, 1)
+		floor.label.BackgroundColor3 = if warningThis then Color3.fromRGB(220, 15, 30) else Color3.fromRGB(8, 8, 12)
+		floor.label.BackgroundTransparency = if warningThis then 0 else 0.25
+		local billboard = floor.label.Parent
+		if billboard and billboard:IsA("BillboardGui") then
+			billboard.Size = if warningThis then UDim2.fromOffset(320, 130) else UDim2.fromOffset(180, 72)
+		end
 		floor.highlight.FillTransparency = 1
-		floor.highlight.OutlineTransparency = if role == "ghost" then 0.7 else 0.2
+		floor.highlight.OutlineTransparency = if ghost then 0.55 else 0
 	end
 
 	local currentFloor = floors[current]
@@ -453,12 +461,12 @@ function Tower.setActive(current: number, phase: string)
 		jumpBeam.Attachment0 = beamBottom
 		jumpBeam.Attachment1 = beamTop
 		jumpBeam.FaceCamera = true
-		jumpBeam.Width0 = 2.4
-		jumpBeam.Width1 = 2.4
+		jumpBeam.Width0 = 5
+		jumpBeam.Width1 = 5
 		jumpBeam.LightEmission = 1
 		jumpBeam.LightInfluence = 0
-		jumpBeam.Color = ColorSequence.new(Color3.new(1, 1, 1))
-		jumpBeam.Transparency = NumberSequence.new(0.12)
+		jumpBeam.Color = ColorSequence.new(Color3.fromRGB(255, 255, 40), Color3.fromRGB(255, 40, 40))
+		jumpBeam.Transparency = NumberSequence.new(0)
 		jumpBeam.Parent = currentFloor.body
 		beam = jumpBeam
 
@@ -469,11 +477,14 @@ function Tower.setActive(current: number, phase: string)
 				if currentFloor.dropped or currentFloor.body.Parent == nil then
 					break
 				end
-				local flash = if on then Color3.new(1, 1, 1) else Color3.fromRGB(255, 36, 48)
+				local flash = if on then Color3.new(1, 1, 1) else Color3.fromRGB(255, 0, 30)
 				paint(currentFloor, flash)
-				currentFloor.highlight.FillColor = Color3.fromRGB(255, 40, 50)
-				currentFloor.highlight.FillTransparency = if on then 0.35 else 0.7
-				task.wait(0.12)
+				currentFloor.label.BackgroundColor3 = if on then Color3.new(1, 1, 1) else Color3.fromRGB(255, 0, 30)
+				currentFloor.label.TextColor3 = if on then Color3.fromRGB(180, 0, 20) else Color3.new(1, 1, 1)
+				currentFloor.highlight.FillColor = flash
+				currentFloor.highlight.FillTransparency = if on then 0.15 else 0.45
+				currentFloor.highlight.OutlineColor = Color3.new(1, 1, 1)
+				task.wait(0.1)
 			end
 		end)
 	end
