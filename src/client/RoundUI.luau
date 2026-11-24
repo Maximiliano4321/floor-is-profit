@@ -26,6 +26,8 @@ local countdownBanner: Frame? = nil
 local countdownNumber: TextLabel? = nil
 local countdownFloor: TextLabel? = nil
 local countdownStroke: UIStroke? = nil
+local nextTowerBanner: Frame? = nil
+local nextTowerNumber: TextLabel? = nil
 local jackpotBanner: Frame? = nil
 local jackpotAmount: TextLabel? = nil
 local jackpotScale: UIScale? = nil
@@ -78,6 +80,9 @@ local function render()
 	end
 	local seconds = tostring(math.max(0, math.ceil(remaining)))
 	local phase = snapshot.phase
+	local nextTower = phase == "intermission"
+		and type(snapshot.message) == "string"
+		and string.find(snapshot.message, "Next tower", 1, true) ~= nil
 
 	if phase == "countdown" then
 		setText(timerLabel, seconds)
@@ -96,7 +101,7 @@ local function render()
 		setText(captionLabel, "Top floor")
 	elseif phase == "intermission" then
 		setText(timerLabel, seconds)
-		setText(captionLabel, "Next tower")
+		setText(captionLabel, if nextTower then "Next tower" else "Round over")
 	else
 		setText(timerLabel, "...")
 		setText(captionLabel, "Get ready")
@@ -113,6 +118,13 @@ local function render()
 				countdownStroke.Color = snapshot.color
 				countdownNumber.TextColor3 = snapshot.color
 			end
+		end
+	end
+
+	if nextTowerBanner and nextTowerNumber then
+		nextTowerBanner.Visible = nextTower
+		if nextTower then
+			nextTowerNumber.Text = seconds
 		end
 	end
 
@@ -342,6 +354,52 @@ function RoundUI.start(remoteBundle)
 		size = UDim2.new(1, 0, 0, 28),
 	})
 	countdownCaption.Name = "Caption"
+
+	nextTowerBanner = Instance.new("Frame")
+	nextTowerBanner.Name = "NextTower"
+	nextTowerBanner.AnchorPoint = Vector2.new(0.5, 0.5)
+	nextTowerBanner.Position = UDim2.fromScale(0.5, 0.42)
+	nextTowerBanner.Size = UDim2.fromOffset(640, 230)
+	nextTowerBanner.BackgroundColor3 = Color3.fromRGB(8, 12, 20)
+	nextTowerBanner.BorderSizePixel = 0
+	nextTowerBanner.Visible = false
+	nextTowerBanner.Parent = gui
+	corner(nextTowerBanner, 18)
+	local nextStroke = Instance.new("UIStroke")
+	nextStroke.Thickness = 7
+	nextStroke.Color = Color3.fromRGB(80, 190, 255)
+	nextStroke.Parent = nextTowerBanner
+	local nextTitle = label({
+		parent = nextTowerBanner,
+		text = "NEXT TOWER",
+		font = Enum.Font.GothamBlack,
+		textSize = 54,
+		color = Color3.fromRGB(140, 220, 255),
+		position = UDim2.fromOffset(0, 16),
+		size = UDim2.new(1, 0, 0, 64),
+	})
+	local nextTitleStroke = Instance.new("UIStroke")
+	nextTitleStroke.Thickness = 2
+	nextTitleStroke.Color = Color3.fromRGB(0, 20, 40)
+	nextTitleStroke.Parent = nextTitle
+	nextTowerNumber = label({
+		parent = nextTowerBanner,
+		text = "4",
+		font = Enum.Font.GothamBlack,
+		textSize = 96,
+		color = Color3.new(1, 1, 1),
+		position = UDim2.fromOffset(0, 82),
+		size = UDim2.new(1, 0, 0, 100),
+	})
+	label({
+		parent = nextTowerBanner,
+		text = "NEW TOWER IN",
+		font = Enum.Font.GothamBlack,
+		textSize = 20,
+		color = Color3.fromRGB(190, 220, 240),
+		position = UDim2.fromOffset(0, 186),
+		size = UDim2.new(1, 0, 0, 28),
+	})
 
 	jackpotBanner = Instance.new("Frame")
 	jackpotBanner.Name = "JackpotBanner"
