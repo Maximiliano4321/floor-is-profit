@@ -28,6 +28,8 @@ You spawn on the red floor. A few seconds later it pays everyone still standing 
 
 After that opening drop, each floor waits **30 seconds**, pays, warns you, then drops. The gold floor never drops. If you are still on it, you split the **$20,000** jackpot. If you fall before that, the leaderboard gives back only what you earned this round.
 
+Lifetime cash is the leaderboard `Cash` value. It is saved in the `FloorIsProfitCash` DataStore under the player's user id, and loaded again when they rejoin. Round cash is not saved. A fall still subtracts only this round, then the remaining lifetime total is what gets written.
+
 | Floor | Color | Pays |
 | --- | --- | --- |
 | 1 | Red | $500, then drops in about 7 seconds |
@@ -104,3 +106,4 @@ This environment cannot launch Roblox Studio, so none of the following has been 
 - Second Life, 2x Next Floor, and the survivor trail, from the buttons and from chat.
 - Two players splitting the jackpot.
 - Builtin sounds (`electronicpingshort`, `button`, `uuhhh`, `victory`). If one of those paths is missing, that moment is silent. The round still runs.
+- Lifetime cash across Play sessions. Studio only writes the DataStore when **Game Settings > Security > Enable Studio Access to API Services** is on. If it is off, cash still tracks for that Play session and the output says the DataStore did not save.

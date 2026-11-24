@@ -12,6 +12,7 @@ Players.RespawnTime = 2.5
 
 local remotes = Remotes.create()
 Tower.prepareLighting()
+Cash.start()
 Products.bind(remotes)
 DevCommands.bind(remotes)
 
@@ -28,6 +29,8 @@ end
 
 Players.PlayerRemoving:Connect(function(player)
 	RoundLoop.onPlayerRemoving(player)
+	Cash.save(player)
+	Cash.release(player)
 end)
 
 RoundLoop.start(remotes)
