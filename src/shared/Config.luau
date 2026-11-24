@@ -62,8 +62,13 @@ function Config.topY(floorIndex: number): number
 	return Config.FirstTopY + (floorIndex - 1) * Config.FloorSpacing
 end
 
-function Config.payoutFor(floorIndex: number): number
-	return Config.Payouts[floorIndex] or 0
+function Config.payoutFor(floorIndex: number, towerNumber: number?): number
+	local base = Config.Payouts[floorIndex] or 0
+	local tower = if type(towerNumber) == "number" then math.floor(towerNumber) else 1
+	if tower < 1 then
+		tower = 1
+	end
+	return base * tower
 end
 
 function Config.countdownFor(floorIndex: number): number

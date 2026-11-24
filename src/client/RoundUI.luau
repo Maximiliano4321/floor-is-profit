@@ -12,6 +12,7 @@ local snapshot = nil
 local timerLabel: TextLabel? = nil
 local captionLabel: TextLabel? = nil
 local floorLabel: TextLabel? = nil
+local towerLabel: TextLabel? = nil
 local roundLabel: TextLabel? = nil
 local lifetimeLabel: TextLabel? = nil
 local jackpotLabel: TextLabel? = nil
@@ -47,6 +48,8 @@ local function applySnapshot(value)
 	end
 	snapshot = value
 	setText(floorLabel, string.format("FLOOR %d / %d", value.floor, value.floorCount or Config.FloorCount))
+	local tower = if type(value.tower) == "number" and value.tower >= 1 then math.floor(value.tower) else 1
+	setText(towerLabel, string.format("TOWER %d", tower))
 	setText(messageLabel, type(value.message) == "string" and value.message or "")
 	if type(value.jackpot) == "number" then
 		setText(jackpotLabel, "Jackpot  " .. Config.formatCash(value.jackpot))
@@ -207,8 +210,18 @@ function RoundUI.start(remoteBundle)
 		text = "FLOOR 1 / 8",
 		textSize = 14,
 		color = Color3.fromRGB(255, 90, 96),
-		position = UDim2.fromOffset(0, 8),
-		size = UDim2.new(1, 0, 0, 18),
+		align = Enum.TextXAlignment.Left,
+		position = UDim2.fromOffset(12, 8),
+		size = UDim2.new(0.58, -12, 0, 18),
+	})
+	towerLabel = label({
+		parent = panel,
+		text = "TOWER 1",
+		textSize = 13,
+		color = Color3.fromRGB(255, 214, 90),
+		align = Enum.TextXAlignment.Right,
+		position = UDim2.new(0.58, 0, 0, 8),
+		size = UDim2.new(0.42, -12, 0, 18),
 	})
 	timerLabel = label({
 		parent = panel,

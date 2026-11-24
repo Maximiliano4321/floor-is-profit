@@ -28,6 +28,7 @@ local state = {
 }
 
 local lastSnapshot = nil
+local towerNumber = 1
 
 local function countAlive(): number
 	local total = 0
@@ -75,8 +76,9 @@ local function broadcast(phase: string, floorIndex: number, duration: number, me
 		floor = floorIndex,
 		floorCount = Config.FloorCount,
 		endsAt = workspace:GetServerTimeNow() + duration,
-		payout = Config.payoutFor(floorIndex),
+		payout = Config.payoutFor(floorIndex, towerNumber),
 		jackpot = Config.Jackpot,
+		tower = towerNumber,
 		message = message,
 		alive = countAlive(),
 		color = Tower.colorOf(floorIndex),
@@ -320,7 +322,7 @@ local function survived(player: Player, destination: number): boolean
 end
 
 local function payFloor(floorIndex: number)
-	local payout = Config.payoutFor(floorIndex)
+	local payout = Config.payoutFor(floorIndex, towerNumber)
 	if payout <= 0 then
 		return
 	end
@@ -478,6 +480,7 @@ local function runRound()
 	state.dropping = false
 	state.penalties = false
 	state.floor = 1
+	Tower.setTowerNumber(towerNumber)
 
 	for _, player in Players:GetPlayers() do
 		player:SetAttribute("Eliminated", false)
@@ -511,7 +514,7 @@ local function runRound()
 		Tower.setActive(floorIndex, "countdown")
 
 		local countdown = Config.countdownFor(floorIndex)
-		local payout = Config.payoutFor(floorIndex)
+		local payout = Config.payoutFor(floorIndex, towerNumber)
 		local message = if floorIndex == 1
 			then "Stand here. This floor pays, then it falls."
 			else "This floor pays " .. Config.formatCash(payout) .. ", then it drops."
@@ -575,6 +578,8 @@ local function runRound()
 	end
 
 	if reachedTop then
+		towerNumber += 1
+		Tower.setTowerNumber(towerNumber)
 		broadcast("intermission", 1, Config.Intermission, "Next tower.")
 		task.wait(Config.Intermission)
 	end

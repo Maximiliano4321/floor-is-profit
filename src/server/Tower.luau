@@ -14,6 +14,7 @@ local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Co
 local Tower = {}
 
 local floors = {}
+local towerNumber = 1
 local root: Folder? = nil
 local visualToken = 0
 local beam: Beam? = nil
@@ -155,7 +156,7 @@ local function payoutText(index: number, phase: string, current: number): string
 	if index >= Config.FloorCount then
 		return "JACKPOT\n" .. Config.formatCash(Config.Jackpot)
 	end
-	local amount = Config.formatCash(Config.payoutFor(index))
+	local amount = Config.formatCash(Config.payoutFor(index, towerNumber))
 	local alreadyPaid = index < current or (index == current and (phase == "warn" or phase == "drop" or phase == "jackpot"))
 	if alreadyPaid then
 		return "PAID\n" .. amount
@@ -173,7 +174,7 @@ local function labelText(index: number, phase: string, current: number): string
 	if index >= Config.FloorCount then
 		return "TOP\n" .. Config.formatCash(Config.Jackpot)
 	end
-	return string.format("FLOOR %d\n%s", index, Config.formatCash(Config.payoutFor(index)))
+	return string.format("FLOOR %d\n%s", index, Config.formatCash(Config.payoutFor(index, towerNumber)))
 end
 
 local function makeLabel(parent: BasePart, text: string)
@@ -324,6 +325,14 @@ local function buildSpine(parent: Instance)
 	local edge = Config.FloorSize.X / 2 + 3
 	spine.Position = Vector3.new(-edge, top / 2, -edge)
 	spine.Parent = parent
+end
+
+function Tower.setTowerNumber(number: number)
+	local nextNumber = math.floor(number)
+	if nextNumber < 1 then
+		nextNumber = 1
+	end
+	towerNumber = nextNumber
 end
 
 function Tower.withinColumn(position: Vector3): boolean

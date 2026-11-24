@@ -39,6 +39,8 @@ After that opening drop, each floor waits **30 seconds**, pays, warns you, then 
 | 7 | Purple | $5,000 |
 | 8 | Gold | Jackpot, split by whoever is still up |
 
+Those floor amounts are tower 1. After a jackpot, the next tower is numbered and each floor pays that many times the tower 1 amount. Tower 2 pays double, tower 3 pays triple. The jackpot stays $20,000. A wipe does not raise the tower number.
+
 Jump height is raised so a straight jump clears the next floor. You do not need to run sideways.
 
 ## Dev products
