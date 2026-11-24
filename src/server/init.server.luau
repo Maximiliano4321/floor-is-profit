@@ -1,8 +1,8 @@
 local Players = game:GetService("Players")
 
--- Stop the character from spawning into an empty world. The tower is built
--- before CharacterAutoLoads is turned back on.
-Players.CharacterAutoLoads = false
+-- Leave Roblox's normal spawn on. Turning it off leaves Play with no
+-- character, and the camera stays frozen because it has nothing to follow.
+Players.CharacterAutoLoads = true
 Players.RespawnTime = 2.5
 
 local Remotes = require(script:WaitForChild("Remotes"))
@@ -14,6 +14,8 @@ local DevCommands = require(script:WaitForChild("DevCommands"))
 
 local remotes = Remotes.create()
 Tower.prepareLighting()
+-- Floors and the floor-1 spawn exist before we touch the player.
+RoundLoop.start(remotes)
 
 local function onPlayer(player: Player)
 	Cash.setup(player)
@@ -32,8 +34,6 @@ Players.PlayerRemoving:Connect(function(player)
 	Cash.release(player)
 end)
 
--- Floors exist before chat, DataStore, or the round loop can fail.
-RoundLoop.start(remotes)
 Cash.start()
 local extrasOk, extrasErr = pcall(function()
 	Products.bind(remotes)

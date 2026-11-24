@@ -120,15 +120,15 @@ local function buildFloorSpawn(parent: Instance)
 	local spawn = Instance.new("SpawnLocation")
 	spawn.Name = "FloorSpawn"
 	spawn.Anchored = true
-	spawn.CanCollide = false
+	spawn.CanCollide = true
 	spawn.CanQuery = false
 	spawn.Transparency = 1
 	spawn.Enabled = true
 	spawn.Neutral = true
 	spawn.Duration = 0
 	spawn.AllowTeamChangeOnTouch = false
-	spawn.Size = Vector3.new(8, 1, 8)
-	spawn.Position = Vector3.new(0, top + 4, 0)
+	spawn.Size = Vector3.new(12, 1, 12)
+	spawn.Position = Vector3.new(0, top + 0.5, 0)
 	spawn.Parent = parent
 end
 
@@ -396,7 +396,6 @@ end
 
 function Tower.build(onKillTouch: (BasePart) -> ())
 	Tower.registerGroups()
-	clearDefaultMap()
 	clearBeam()
 	visualToken += 1
 	table.clear(floors)
@@ -518,6 +517,9 @@ function Tower.build(onKillTouch: (BasePart) -> ())
 	if previous and previous ~= tower then
 		previous:Destroy()
 	end
+	-- Remove the template baseplate only after FloorSpawn is in the world,
+	-- so character loading still has a spawn to use.
+	clearDefaultMap()
 	print("[Floor is Profit] Tower is in Workspace: 8 floors, spawn on floor 1.")
 end
 

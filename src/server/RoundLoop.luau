@@ -153,45 +153,12 @@ local function applyDesired(player: Player): boolean
 	return true
 end
 
-local function characterReady(player: Player): Model?
-	local function usable(model: Model?): boolean
-		if not model or model.Parent == nil then
-			return false
-		end
-		local humanoid = model:FindFirstChildOfClass("Humanoid")
-		return humanoid ~= nil and humanoid.Health > 0 and model:FindFirstChild("HumanoidRootPart") ~= nil
-	end
-
-	if usable(player.Character) then
-		return player.Character
-	end
-
-	local arrived: Model? = nil
-	local connection = player.CharacterAdded:Connect(function(model)
-		arrived = model
-	end)
-	local existing = player.Character
-	local humanoid = existing and existing:FindFirstChildOfClass("Humanoid")
-	if existing == nil or (humanoid and humanoid:IsA("Humanoid") and humanoid.Health <= 0) then
-		player:LoadCharacter()
-	end
-
-	local deadline = os.clock() + 8
-	while os.clock() < deadline do
-		local character = arrived or player.Character
-		if usable(character) then
-			connection:Disconnect()
-			return character
-		end
-		task.wait(0.05)
-	end
-	connection:Disconnect()
-	return nil
-end
-
 local function placeOnFloor(player: Player, floorIndex: number): boolean
 	desired[player] = "floor:" .. tostring(floorIndex)
-	if not characterReady(player) then
+	-- Do not call LoadCharacter here. Auto-load owns spawning. This only
+	-- moves a character that already exists onto the floor.
+	local character, humanoid = characterParts(player)
+	if not character or not humanoid or humanoid.Health <= 0 then
 		return false
 	end
 	return applyDesired(player)
@@ -646,19 +613,6 @@ function RoundLoop.start(remoteBundle)
 		towerReady = true
 	else
 		warn("[Floor is Profit] tower build failed: ", buildErr)
-	end
-
-	Players.CharacterAutoLoads = true
-	local placed, placeErr = pcall(function()
-		for _, player in Players:GetPlayers() do
-			if placeOnFloor(player, 1) then
-				player:SetAttribute("Alive", true)
-				player:SetAttribute("Eliminated", false)
-			end
-		end
-	end)
-	if not placed then
-		warn("[Floor is Profit] could not place the first player: ", placeErr)
 	end
 
 	RunService.PreSimulation:Connect(updatePassage)
