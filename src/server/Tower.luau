@@ -1,7 +1,7 @@
--- Builds one bright tower. Each floor has a visible body and a thin pad.
--- The pad you are standing on is solid. The next pad lets climbers pass
--- through it, then catches them once their feet are above it, so a straight
--- jump up lands on the next floor instead of bonking the ceiling.
+-- Builds one bright tower. Each floor has a visible body, a thin pad, and a
+-- lip around that pad. The pad you are standing on is solid. The next pad and
+-- its lip let climbers pass through from below, then catch them once their
+-- feet are above it, so a straight jump lands instead of bonking the ceiling.
 
 local Debris = game:GetService("Debris")
 local Lighting = game:GetService("Lighting")
@@ -340,6 +340,36 @@ function Tower.withinColumn(position: Vector3): boolean
 	return math.abs(position.X) <= half and math.abs(position.Z) <= half
 end
 
+local function lipColor(color: Color3): Color3
+	return color:Lerp(Color3.new(1, 1, 1), 0.55)
+end
+
+local function applyCatch(part: BasePart, role: string)
+	part.CanCollide = role ~= "ghost"
+	if role == "ground" then
+		part.CollisionGroup = Config.Groups.Ground
+	elseif role == "step" then
+		part.CollisionGroup = Config.Groups.Step
+	else
+		part.CollisionGroup = Config.Groups.Ghost
+	end
+end
+
+local function makeLip(model: Model, name: string, size: Vector3, position: Vector3, color: Color3): BasePart
+	local lip = Instance.new("Part")
+	lip.Name = name
+	lip.Anchored = true
+	lip.CanQuery = false
+	lip.Material = Enum.Material.SmoothPlastic
+	lip.Color = lipColor(color)
+	lip.TopSurface = Enum.SurfaceType.Smooth
+	lip.BottomSurface = Enum.SurfaceType.Smooth
+	lip.Size = size
+	lip.Position = position
+	lip.Parent = model
+	return lip
+end
+
 function Tower.build(onKillTouch: (BasePart) -> ())
 	Tower.registerGroups()
 	clearDefaultMap()
@@ -397,16 +427,27 @@ function Tower.build(onKillTouch: (BasePart) -> ())
 		local pad = Instance.new("Part")
 		pad.Name = "Pad"
 		pad.Anchored = true
-		pad.CanCollide = index <= 2
 		pad.CanQuery = false
 		pad.Transparency = 1
 		pad.Size = Vector3.new(Config.FloorSize.X, Config.PadThickness, Config.FloorSize.Z)
 		pad.Position = Vector3.new(0, top - (Config.PadThickness / 2), 0)
-		pad.CollisionGroup = if index == 1
-			then Config.Groups.Ground
-			elseif index == 2 then Config.Groups.Step
-			else Config.Groups.Ghost
 		pad.Parent = model
+
+		local half = Config.FloorSize.X / 2
+		local lipWidth = Config.LipWidth
+		local lipY = top - (Config.LipThickness / 2)
+		local reach = half + (lipWidth / 2)
+		local role = if index == 1 then "ground" elseif index == 2 then "step" else "ghost"
+		local lips = {
+			makeLip(model, "LipNorth", Vector3.new(Config.FloorSize.X + lipWidth * 2, Config.LipThickness, lipWidth), Vector3.new(0, lipY, reach), color),
+			makeLip(model, "LipSouth", Vector3.new(Config.FloorSize.X + lipWidth * 2, Config.LipThickness, lipWidth), Vector3.new(0, lipY, -reach), color),
+			makeLip(model, "LipEast", Vector3.new(lipWidth, Config.LipThickness, Config.FloorSize.Z), Vector3.new(reach, lipY, 0), color),
+			makeLip(model, "LipWest", Vector3.new(lipWidth, Config.LipThickness, Config.FloorSize.Z), Vector3.new(-reach, lipY, 0), color),
+		}
+		applyCatch(pad, role)
+		for _, lip in lips do
+			applyCatch(lip, role)
+		end
 
 		local light = Instance.new("PointLight")
 		light.Name = "Glow"
@@ -437,6 +478,7 @@ function Tower.build(onKillTouch: (BasePart) -> ())
 			body = body,
 			trim = trim,
 			pad = pad,
+			lips = lips,
 			light = light,
 			highlight = highlight,
 			label = label,
@@ -467,6 +509,10 @@ local function paint(floor, color: Color3)
 	floor.body.Color = color
 	floor.trim.Color = color
 	floor.highlight.FillColor = color
+	local rim = lipColor(color)
+	for _, lip in floor.lips do
+		lip.Color = rim
+	end
 end
 
 function Tower.setActive(current: number, phase: string)
@@ -486,13 +532,10 @@ function Tower.setActive(current: number, phase: string)
 			role = "step"
 		end
 
-		floor.pad.CanCollide = role ~= "ghost"
-		if role == "ground" then
-			floor.pad.CollisionGroup = Config.Groups.Ground
-		elseif role == "step" then
-			floor.pad.CollisionGroup = Config.Groups.Step
-		else
-			floor.pad.CollisionGroup = Config.Groups.Ghost
+		applyCatch(floor.pad, role)
+		for _, lip in floor.lips do
+			applyCatch(lip, role)
+			lip.Transparency = if ghost then 0.4 else 0
 		end
 
 		local ghost = role == "ghost"
@@ -605,8 +648,10 @@ function Tower.drop(index: number)
 		return
 	end
 	floor.dropped = true
-	floor.pad.CanCollide = false
-	floor.pad.CollisionGroup = Config.Groups.Ghost
+	applyCatch(floor.pad, "ghost")
+	for _, lip in floor.lips do
+		applyCatch(lip, "ghost")
+	end
 	floor.light.Enabled = false
 	floor.label.Text = ""
 	paint(floor, floor.baseColor)
@@ -623,6 +668,9 @@ function Tower.drop(index: number)
 			model:PivotTo(startPivot + Vector3.new(0, -42 * eased, 0))
 			floor.body.Transparency = eased
 			floor.trim.Transparency = eased
+			for _, lip in floor.lips do
+				lip.Transparency = eased
+			end
 			if alpha >= 1 then
 				break
 			end

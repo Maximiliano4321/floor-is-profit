@@ -7,6 +7,10 @@ local Config = {
 	FloorCount = 8,
 	FloorSize = Vector3.new(40, 1.8, 40),
 	PadThickness = 0.3,
+	-- Extra landing surface around the pad. Narrow enough that a player
+	-- standing on it is still inside the column that counts as on the floor.
+	LipWidth = 2,
+	LipThickness = 0.35,
 	-- Studs from one floor's top surface to the next floor's top surface.
 	-- JumpHeight has to clear this. Players jump straight up through the
 	-- next floor; it only becomes solid once their feet are above it.

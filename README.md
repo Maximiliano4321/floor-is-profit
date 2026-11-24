@@ -43,7 +43,7 @@ Lifetime cash is the leaderboard `Cash` value. It is saved in the `FloorIsProfit
 
 Those floor amounts are tower 1. After a jackpot, the next tower is numbered and each floor pays that many times the tower 1 amount. Tower 2 pays double, tower 3 pays triple. The jackpot stays $20,000. A wipe does not raise the tower number.
 
-Jump height is raised so a straight jump clears the next floor. You do not need to run sideways.
+Jump height is raised so a straight jump clears the next floor. You do not need to run sideways. Each floor has a thin lip around the standing surface, so a jump that is a little wide still lands. The lip uses the same one-way collision as the pad: you pass through it from below, then it catches you.
 
 ## Dev products
 
