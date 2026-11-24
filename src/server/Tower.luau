@@ -15,7 +15,7 @@ local Tower = {}
 
 local floors = {}
 local towerNumber = 1
-local root: Folder? = nil
+local root: Model? = nil
 local visualToken = 0
 local beam: Beam? = nil
 local beamTop: Attachment? = nil
@@ -35,7 +35,9 @@ local function ensureGroup(name: string)
 end
 
 local function setCollide(a: string, b: string, canCollide: boolean)
-	PhysicsService:CollisionGroupSetCollidable(a, b, canCollide)
+	pcall(function()
+		PhysicsService:CollisionGroupSetCollidable(a, b, canCollide)
+	end)
 end
 
 function Tower.registerGroups()
@@ -107,10 +109,27 @@ local function clearDefaultMap()
 		baseplate:Destroy()
 	end
 	for _, child in workspace:GetChildren() do
-		if child:IsA("SpawnLocation") then
+		if child:IsA("SpawnLocation") and child.Name ~= "FloorSpawn" then
 			child:Destroy()
 		end
 	end
+end
+
+local function buildFloorSpawn(parent: Instance)
+	local top = Config.topY(1)
+	local spawn = Instance.new("SpawnLocation")
+	spawn.Name = "FloorSpawn"
+	spawn.Anchored = true
+	spawn.CanCollide = false
+	spawn.CanQuery = false
+	spawn.Transparency = 1
+	spawn.Enabled = true
+	spawn.Neutral = true
+	spawn.Duration = 0
+	spawn.AllowTeamChangeOnTouch = false
+	spawn.Size = Vector3.new(8, 1, 8)
+	spawn.Position = Vector3.new(0, top + 4, 0)
+	spawn.Parent = parent
 end
 
 function Tower.prepareLighting()
@@ -346,12 +365,17 @@ end
 
 local function applyCatch(part: BasePart, role: string)
 	part.CanCollide = role ~= "ghost"
+	local group = Config.Groups.Ghost
 	if role == "ground" then
-		part.CollisionGroup = Config.Groups.Ground
+		group = Config.Groups.Ground
 	elseif role == "step" then
-		part.CollisionGroup = Config.Groups.Step
-	else
-		part.CollisionGroup = Config.Groups.Ghost
+		group = Config.Groups.Step
+	end
+	local assigned = pcall(function()
+		part.CollisionGroup = group
+	end)
+	if not assigned then
+		part.CollisionGroup = "Default"
 	end
 end
 
@@ -377,19 +401,8 @@ function Tower.build(onKillTouch: (BasePart) -> ())
 	visualToken += 1
 	table.clear(floors)
 
-	if root then
-		root:Destroy()
-		root = nil
-	end
-
-	local folder = Instance.new("Folder")
-	folder.Name = "FloorIsProfit"
-	folder.Parent = workspace
-	root = folder
-
 	local tower = Instance.new("Model")
 	tower.Name = "Tower"
-	tower.Parent = folder
 
 	buildSpine(tower)
 
@@ -488,13 +501,24 @@ function Tower.build(onKillTouch: (BasePart) -> ())
 		}
 	end
 
-	buildSideline(folder)
-	local killPlane = buildKillPlane(folder)
+	buildSideline(tower)
+	buildFloorSpawn(tower)
+	local killPlane = buildKillPlane(tower)
 	killPlane.Touched:Connect(function(hit)
 		if hit and hit:IsA("BasePart") then
 			onKillTouch(hit)
 		end
 	end)
+
+	-- Parent the finished model before removing the previous one, so Play
+	-- never has an empty Workspace while the next tower is assembled.
+	tower.Parent = workspace
+	local previous = root
+	root = tower
+	if previous and previous ~= tower then
+		previous:Destroy()
+	end
+	print("[Floor is Profit] Tower is in Workspace: 8 floors, spawn on floor 1.")
 end
 
 function Tower.colorOf(index: number): Color3

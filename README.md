@@ -90,6 +90,8 @@ src/client/ProductButtons.luau
 
 `src/server` syncs as a Script under ServerScriptService. `src/client` syncs as a LocalScript under StarterPlayerScripts. `src/shared` syncs into ReplicatedStorage.
 
+Play builds `Workspace.Tower` immediately: 8 floors and a spawn on the red floor. The character does not load until that model is parented. The pay, warn, and drop loop starts after you are standing on floor 1.
+
 ## Timing
 
 Floor 1 is short on purpose: about 3.5 seconds, then the payout, a jump warning, then the drop. Spawn, cash, the fall, and the jump should all happen within the first 20 seconds of Play, after the character appears.

@@ -153,11 +153,46 @@ local function applyDesired(player: Player): boolean
 	return true
 end
 
+local function characterReady(player: Player): Model?
+	local function usable(model: Model?): boolean
+		if not model or model.Parent == nil then
+			return false
+		end
+		local humanoid = model:FindFirstChildOfClass("Humanoid")
+		return humanoid ~= nil and humanoid.Health > 0 and model:FindFirstChild("HumanoidRootPart") ~= nil
+	end
+
+	if usable(player.Character) then
+		return player.Character
+	end
+
+	local arrived: Model? = nil
+	local connection = player.CharacterAdded:Connect(function(model)
+		arrived = model
+	end)
+	local existing = player.Character
+	local humanoid = existing and existing:FindFirstChildOfClass("Humanoid")
+	if existing == nil or (humanoid and humanoid:IsA("Humanoid") and humanoid.Health <= 0) then
+		player:LoadCharacter()
+	end
+
+	local deadline = os.clock() + 8
+	while os.clock() < deadline do
+		local character = arrived or player.Character
+		if usable(character) then
+			connection:Disconnect()
+			return character
+		end
+		task.wait(0.05)
+	end
+	connection:Disconnect()
+	return nil
+end
+
 local function placeOnFloor(player: Player, floorIndex: number): boolean
 	desired[player] = "floor:" .. tostring(floorIndex)
-	local _, humanoid = characterParts(player)
-	if not humanoid or humanoid.Health <= 0 then
-		player:LoadCharacter()
+	if not characterReady(player) then
+		return false
 	end
 	return applyDesired(player)
 end
@@ -254,7 +289,7 @@ function RoundLoop.onPlayer(player: Player)
 	hooked[player] = true
 	player:SetAttribute("Alive", false)
 	player:SetAttribute("Eliminated", false)
-	desired[player] = "spectator"
+	desired[player] = if state.phase == "waiting" then "floor:1" else "spectator"
 
 	player.CharacterAdded:Connect(function(character)
 		onCharacter(player, character)
@@ -477,6 +512,8 @@ local function settleOpening()
 	until os.clock() >= deadline
 end
 
+local towerReady = false
+
 local function runRound()
 	state.skip = false
 	state.dropping = false
@@ -484,19 +521,24 @@ local function runRound()
 	state.floor = 1
 	Tower.setTowerNumber(towerNumber)
 
-	for _, player in Players:GetPlayers() do
-		player:SetAttribute("Eliminated", false)
-		player:SetAttribute("Alive", false)
-		Cash.clearRound(player)
-		desired[player] = "spectator"
+	if towerReady then
+		towerReady = false
+	else
+		Tower.build(onKillTouch)
 	end
 
-	broadcast("waiting", 1, 8, "Stand here. This floor pays, then it falls.")
 	while #Players:GetPlayers() == 0 do
 		task.wait(0.5)
 	end
 
-	Tower.build(onKillTouch)
+	for _, player in Players:GetPlayers() do
+		player:SetAttribute("Eliminated", false)
+		player:SetAttribute("Alive", false)
+		Cash.clearRound(player)
+		desired[player] = "floor:1"
+	end
+
+	broadcast("waiting", 1, 8, "Stand here. This floor pays, then it falls.")
 	settleOpening()
 
 	if countAlive() == 0 then
@@ -596,6 +638,28 @@ function RoundLoop.start(remoteBundle)
 	started = true
 	remotes = remoteBundle
 	Tower.registerGroups()
+
+	local built, buildErr = pcall(function()
+		Tower.build(onKillTouch)
+	end)
+	if built then
+		towerReady = true
+	else
+		warn("[Floor is Profit] tower build failed: ", buildErr)
+	end
+
+	Players.CharacterAutoLoads = true
+	local placed, placeErr = pcall(function()
+		for _, player in Players:GetPlayers() do
+			if placeOnFloor(player, 1) then
+				player:SetAttribute("Alive", true)
+				player:SetAttribute("Eliminated", false)
+			end
+		end
+	end)
+	if not placed then
+		warn("[Floor is Profit] could not place the first player: ", placeErr)
+	end
 
 	RunService.PreSimulation:Connect(updatePassage)
 	RunService.Heartbeat:Connect(updateFalls)
