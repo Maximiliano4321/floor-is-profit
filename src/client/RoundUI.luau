@@ -22,6 +22,13 @@ local calloutSub: TextLabel? = nil
 local calloutBanner: Frame? = nil
 local calloutScale: UIScale? = nil
 local panelStroke: UIStroke? = nil
+local countdownBanner: Frame? = nil
+local countdownNumber: TextLabel? = nil
+local countdownFloor: TextLabel? = nil
+local countdownStroke: UIStroke? = nil
+local jackpotBanner: Frame? = nil
+local jackpotAmount: TextLabel? = nil
+local jackpotScale: UIScale? = nil
 
 local function setText(label: TextLabel?, text: string)
 	if label then
@@ -95,7 +102,31 @@ local function render()
 		setText(captionLabel, "Get ready")
 	end
 
-	local showCallout = phase == "warn" or phase == "drop" or phase == "jackpot"
+	if countdownBanner and countdownNumber and countdownFloor then
+		local showCountdown = phase == "countdown"
+		countdownBanner.Visible = showCountdown
+		if showCountdown then
+			countdownNumber.Text = seconds
+			local floorIndex = snapshot.floor or 1
+			countdownFloor.Text = string.format("FLOOR %d", floorIndex)
+			if countdownStroke and typeof(snapshot.color) == "Color3" then
+				countdownStroke.Color = snapshot.color
+				countdownNumber.TextColor3 = snapshot.color
+			end
+		end
+	end
+
+	if jackpotBanner and jackpotAmount and jackpotScale then
+		local showJackpot = phase == "jackpot"
+		jackpotBanner.Visible = showJackpot
+		if showJackpot then
+			local purse = if type(snapshot.jackpot) == "number" then snapshot.jackpot else Config.Jackpot
+			jackpotAmount.Text = Config.formatCash(purse)
+			jackpotScale.Scale = 1 + math.sin(os.clock() * 5) * 0.04
+		end
+	end
+
+	local showCallout = phase == "warn" or phase == "drop"
 	if callout and calloutBanner and calloutScale then
 		calloutBanner.Visible = showCallout
 		if phase == "warn" then
@@ -111,12 +142,6 @@ local function render()
 			calloutBanner.BackgroundColor3 = Color3.fromRGB(180, 60, 0)
 			setText(calloutSub, "GET ON THE NEXT FLOOR")
 			calloutScale.Scale = 1
-		elseif phase == "jackpot" then
-			callout.Text = "JACKPOT"
-			callout.TextColor3 = Color3.fromRGB(255, 220, 60)
-			calloutBanner.BackgroundColor3 = Color3.fromRGB(40, 24, 0)
-			setText(calloutSub, "TOP FLOOR SPLITS IT")
-			calloutScale.Scale = 1 + math.sin(os.clock() * 6) * 0.04
 		end
 	end
 end
@@ -271,6 +296,98 @@ function RoundUI.start(remoteBundle)
 		textSize = 22,
 		color = Color3.new(1, 1, 1),
 		position = UDim2.fromOffset(0, 102),
+		size = UDim2.new(1, 0, 0, 28),
+	})
+
+	countdownBanner = Instance.new("Frame")
+	countdownBanner.Name = "Countdown"
+	countdownBanner.AnchorPoint = Vector2.new(0.5, 0.5)
+	countdownBanner.Position = UDim2.fromScale(0.5, 0.42)
+	countdownBanner.Size = UDim2.fromOffset(280, 220)
+	countdownBanner.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
+	countdownBanner.BackgroundTransparency = 0.12
+	countdownBanner.BorderSizePixel = 0
+	countdownBanner.Visible = false
+	countdownBanner.Parent = gui
+	corner(countdownBanner, 20)
+	countdownStroke = Instance.new("UIStroke")
+	countdownStroke.Thickness = 6
+	countdownStroke.Color = Color3.fromRGB(255, 220, 40)
+	countdownStroke.Parent = countdownBanner
+	countdownFloor = label({
+		parent = countdownBanner,
+		text = "FLOOR 1",
+		font = Enum.Font.GothamBlack,
+		textSize = 28,
+		color = Color3.new(1, 1, 1),
+		position = UDim2.fromOffset(0, 16),
+		size = UDim2.new(1, 0, 0, 34),
+	})
+	countdownNumber = label({
+		parent = countdownBanner,
+		text = "30",
+		font = Enum.Font.GothamBlack,
+		textSize = 120,
+		color = Color3.fromRGB(255, 220, 40),
+		position = UDim2.fromOffset(0, 48),
+		size = UDim2.new(1, 0, 0, 120),
+	})
+	local countdownCaption = label({
+		parent = countdownBanner,
+		text = "PAYS IN",
+		font = Enum.Font.GothamBlack,
+		textSize = 20,
+		color = Color3.fromRGB(230, 230, 236),
+		position = UDim2.fromOffset(0, 172),
+		size = UDim2.new(1, 0, 0, 28),
+	})
+	countdownCaption.Name = "Caption"
+
+	jackpotBanner = Instance.new("Frame")
+	jackpotBanner.Name = "JackpotBanner"
+	jackpotBanner.AnchorPoint = Vector2.new(0.5, 0.5)
+	jackpotBanner.Position = UDim2.fromScale(0.5, 0.4)
+	jackpotBanner.Size = UDim2.fromOffset(720, 210)
+	jackpotBanner.BackgroundColor3 = Color3.fromRGB(28, 16, 0)
+	jackpotBanner.BorderSizePixel = 0
+	jackpotBanner.Visible = false
+	jackpotBanner.Parent = gui
+	corner(jackpotBanner, 18)
+	local jackpotStroke = Instance.new("UIStroke")
+	jackpotStroke.Thickness = 8
+	jackpotStroke.Color = Color3.fromRGB(255, 196, 32)
+	jackpotStroke.Parent = jackpotBanner
+	jackpotScale = Instance.new("UIScale")
+	jackpotScale.Parent = jackpotBanner
+	local jackpotTitle = label({
+		parent = jackpotBanner,
+		text = "JACKPOT",
+		font = Enum.Font.GothamBlack,
+		textSize = 72,
+		color = Color3.fromRGB(255, 214, 48),
+		position = UDim2.fromOffset(0, 16),
+		size = UDim2.new(1, 0, 0, 78),
+	})
+	local jackpotTitleStroke = Instance.new("UIStroke")
+	jackpotTitleStroke.Thickness = 3
+	jackpotTitleStroke.Color = Color3.fromRGB(60, 30, 0)
+	jackpotTitleStroke.Parent = jackpotTitle
+	jackpotAmount = label({
+		parent = jackpotBanner,
+		text = Config.formatCash(Config.Jackpot),
+		font = Enum.Font.GothamBlack,
+		textSize = 54,
+		color = Color3.new(1, 1, 1),
+		position = UDim2.fromOffset(0, 96),
+		size = UDim2.new(1, 0, 0, 60),
+	})
+	label({
+		parent = jackpotBanner,
+		text = "TOP FLOOR PAYS",
+		font = Enum.Font.GothamBlack,
+		textSize = 22,
+		color = Color3.fromRGB(255, 220, 140),
+		position = UDim2.fromOffset(0, 164),
 		size = UDim2.new(1, 0, 0, 28),
 	})
 
