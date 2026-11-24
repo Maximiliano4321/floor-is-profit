@@ -16,7 +16,7 @@ local Config = {
 	-- next floor; it only becomes solid once their feet are above it.
 	FloorSpacing = 9,
 	FirstTopY = 10,
-	JumpHeight = 13,
+	JumpHeight = 18,
 	WalkSpeed = 18,
 
 	OpeningCountdown = 3.5,

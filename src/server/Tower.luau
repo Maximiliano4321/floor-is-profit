@@ -380,7 +380,16 @@ end
 
 function Tower.withinColumn(position: Vector3): boolean
 	local half = Config.FloorSize.X / 2 + Config.ColumnMargin
-	return math.abs(position.X - anchor.X) <= half and math.abs(position.Z - anchor.Z) <= half
+	local center = anchor
+	local model = workspace:FindFirstChild("Tower")
+	if model then
+		local x = model:GetAttribute("CenterX")
+		local z = model:GetAttribute("CenterZ")
+		if type(x) == "number" and type(z) == "number" then
+			center = Vector3.new(x, 0, z)
+		end
+	end
+	return math.abs(position.X - center.X) <= half and math.abs(position.Z - center.Z) <= half
 end
 
 local function lipColor(color: Color3): Color3
@@ -586,14 +595,13 @@ function Tower.setActive(current: number, phase: string)
 		elseif floor.index == current + 1 then
 			role = "step"
 		end
+		local ghost = role == "ghost"
 
 		applyCatch(floor.pad, role)
 		for _, lip in floor.lips do
 			applyCatch(lip, role)
 			lip.Transparency = if ghost then 0.4 else 0
 		end
-
-		local ghost = role == "ghost"
 		local warningThis = phase == "warn" and floor.index == current
 		floor.body.CanCollide = role == "ground"
 		floor.body.Transparency = if ghost then 0.15 else 0

@@ -39,7 +39,7 @@ local function showStartupFloors()
 		local part = Instance.new("Part")
 		part.Name = "Floor" .. tostring(index)
 		part.Anchored = true
-		part.CanCollide = true
+		part.CanCollide = index == 1
 		part.Material = Enum.Material.Neon
 		part.Color = colors[index]
 		part.Transparency = 0

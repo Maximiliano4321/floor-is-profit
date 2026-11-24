@@ -313,7 +313,7 @@ local function standingOn(player: Player, floorIndex: number): boolean
 	end
 	local top = Config.topY(floorIndex)
 	local y = hrp.Position.Y
-	return y >= top + 0.5 and y < top + Config.FloorSpacing - 0.5
+	return y >= top - 1 and y < top + Config.FloorSpacing + 2
 end
 
 local function survived(player: Player, destination: number): boolean
@@ -432,7 +432,10 @@ local function updateFalls()
 		end
 
 		local floorTop = Config.topY(safeFloor())
-		if not Tower.withinColumn(hrp.Position) and footHeight(humanoid, hrp) < floorTop - 2 then
+		local offTheTower = not Tower.withinColumn(hrp.Position) and footHeight(humanoid, hrp) < floorTop - 2
+		if offTheTower and state.phase == "countdown" and state.floor == 1 then
+			placeOnFloor(player, 1)
+		elseif offTheTower then
 			eliminate(player)
 		end
 	end
@@ -470,7 +473,7 @@ local function settleOpening()
 					Products.syncTrail(player)
 				end
 			end
-			if player:GetAttribute("Alive") == true and standingOn(player, 1) then
+			if player:GetAttribute("Alive") == true then
 				settled = true
 			end
 		end
@@ -510,7 +513,16 @@ local function runRound()
 	broadcast("waiting", 1, 8, "Stand here. This floor pays, then it falls.")
 	settleOpening()
 
-	if countAlive() == 0 then
+	local playing = false
+	for _, player in Players:GetPlayers() do
+		if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+			placeOnFloor(player, 1)
+			player:SetAttribute("Eliminated", false)
+			player:SetAttribute("Alive", true)
+			playing = true
+		end
+	end
+	if not playing then
 		broadcast("waiting", 1, 2, "Waiting for a character.")
 		task.wait(2)
 		return
