@@ -1,0 +1,55 @@
+{
+  "name": "Floor is Profit",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Shared": {
+        "$path": "src/shared"
+      }
+    },
+    "ServerScriptService": {
+      "Server": {
+        "$path": "src/server"
+      }
+    },
+    "StarterPlayer": {
+      "$properties": {
+        "AutoJumpEnabled": false,
+        "CameraMaxZoomDistance": 120,
+        "CameraMinZoomDistance": 8,
+        "CharacterJumpHeight": 13,
+        "CharacterUseJumpPower": false,
+        "CharacterWalkSpeed": 18,
+        "EnableMouseLockOption": true
+      },
+      "StarterPlayerScripts": {
+        "Client": {
+          "$path": "src/client"
+        }
+      }
+    },
+    "Lighting": {
+      "$properties": {
+        "Ambient": [0.45, 0.45, 0.52],
+        "Brightness": 2.3,
+        "ClockTime": 14.2,
+        "EnvironmentDiffuseScale": 0.6,
+        "EnvironmentSpecularScale": 0.4,
+        "GlobalShadows": true,
+        "OutdoorAmbient": [0.55, 0.55, 0.6],
+        "Technology": "ShadowMap"
+      }
+    },
+    "SoundService": {
+      "$properties": {
+        "RespectFilteringEnabled": true
+      }
+    },
+    "Workspace": {
+      "$properties": {
+        "FallenPartsDestroyHeight": -200,
+        "StreamingEnabled": false
+      }
+    }
+  }
+}
