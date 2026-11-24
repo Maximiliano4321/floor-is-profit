@@ -141,6 +141,18 @@ local function clearBeam()
 	end
 end
 
+local function payoutText(index: number, phase: string, current: number): string
+	if index >= Config.FloorCount then
+		return "JACKPOT\n" .. Config.formatCash(Config.Jackpot)
+	end
+	local amount = Config.formatCash(Config.payoutFor(index))
+	local alreadyPaid = index < current or (index == current and (phase == "warn" or phase == "drop" or phase == "jackpot"))
+	if alreadyPaid then
+		return "PAID\n" .. amount
+	end
+	return "PAYS\n" .. amount
+end
+
 local function labelText(index: number, phase: string, current: number): string
 	if phase == "warn" and index == current then
 		return "JUMP UP"
@@ -189,6 +201,50 @@ local function makeLabel(parent: BasePart, text: string)
 	limit.MinTextSize = 12
 	limit.MaxTextSize = 28
 	limit.Parent = label
+
+	return label
+end
+
+local function makePayoutSign(parent: BasePart, text: string)
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "Payout"
+	billboard.Size = UDim2.fromOffset(260, 120)
+	billboard.StudsOffset = Vector3.new(0, 8, 0)
+	billboard.AlwaysOnTop = true
+	billboard.MaxDistance = 700
+	billboard.Parent = parent
+
+	local label = Instance.new("TextLabel")
+	label.Name = "Text"
+	label.BackgroundColor3 = Color3.fromRGB(8, 8, 10)
+	label.BackgroundTransparency = 0.1
+	label.Size = UDim2.fromScale(1, 1)
+	label.Font = Enum.Font.GothamBlack
+	label.TextScaled = true
+	label.TextColor3 = Color3.fromRGB(255, 220, 40)
+	label.Text = text
+	label.Parent = billboard
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 10)
+	corner.Parent = label
+
+	local padding = Instance.new("UIPadding")
+	padding.PaddingTop = UDim.new(0, 6)
+	padding.PaddingBottom = UDim.new(0, 6)
+	padding.PaddingLeft = UDim.new(0, 8)
+	padding.PaddingRight = UDim.new(0, 8)
+	padding.Parent = label
+
+	local limit = Instance.new("UITextSizeConstraint")
+	limit.MinTextSize = 18
+	limit.MaxTextSize = 48
+	limit.Parent = label
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Thickness = 2
+	stroke.Color = Color3.fromRGB(255, 180, 0)
+	stroke.Parent = label
 
 	return label
 end
@@ -350,8 +406,8 @@ function Tower.build(onKillTouch: (BasePart) -> ())
 		highlight.OutlineTransparency = 0.25
 		highlight.Parent = body
 
-		local payoutText = labelText(index, "countdown", 1)
-		local label = makeLabel(body, payoutText)
+		local label = makeLabel(body, labelText(index, "countdown", 1))
+		local payout = makePayoutSign(body, payoutText(index, "countdown", 1))
 
 		model.PrimaryPart = body
 		model.Parent = tower
@@ -365,6 +421,7 @@ function Tower.build(onKillTouch: (BasePart) -> ())
 			light = light,
 			highlight = highlight,
 			label = label,
+			payout = payout,
 			baseColor = color,
 			dropped = false,
 		}
@@ -430,6 +487,10 @@ function Tower.setActive(current: number, phase: string)
 		floor.light.Brightness = if role == "ground" then 5 else 3
 		floor.light.Range = 40
 		floor.label.Text = labelText(floor.index, phase, current)
+		floor.payout.Text = payoutText(floor.index, phase, current)
+		floor.payout.TextColor3 = if floor.index < current
+			then Color3.fromRGB(180, 180, 180)
+			else Color3.fromRGB(255, 220, 40)
 		floor.label.TextColor3 = Color3.new(1, 1, 1)
 		floor.label.BackgroundColor3 = if warningThis then Color3.fromRGB(220, 15, 30) else Color3.fromRGB(8, 8, 12)
 		floor.label.BackgroundTransparency = if warningThis then 0 else 0.25
