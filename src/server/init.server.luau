@@ -9,7 +9,6 @@ Players.RespawnTime = 2.5
 -- eight parts are in Workspace first, around the spawn, so Play is never
 -- an empty baseplate if that builder fails.
 local function showStartupFloors()
-	workspace.StreamingEnabled = false
 	local center = Vector3.zero
 	local spawn = workspace:FindFirstChildWhichIsA("SpawnLocation", true)
 	if spawn and spawn:IsA("BasePart") then
@@ -34,7 +33,7 @@ local function showStartupFloors()
 	tower.Name = "Tower"
 	tower:SetAttribute("CenterX", center.X)
 	tower:SetAttribute("CenterZ", center.Z)
-	local size = Vector3.new(96, 4, 96)
+	local size = Vector3.new(80, 1.5, 80)
 	for index = 1, 8 do
 		local top = 10 + (index - 1) * 9
 		local part = Instance.new("Part")

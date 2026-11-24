@@ -135,15 +135,8 @@ local function playAt(parent: Instance, soundId: string, volume: number)
 end
 
 local function clearDefaultMap()
-	local baseplate = workspace:FindFirstChild("Baseplate")
-	if baseplate then
-		baseplate:Destroy()
-	end
-	for _, child in workspace:GetChildren() do
-		if child:IsA("SpawnLocation") and child.Name ~= "FloorSpawn" then
-			child:Destroy()
-		end
-	end
+	-- Leave the baseplate and the default spawn. Deleting them drops the
+	-- player into the void before they are standing on a floor.
 end
 
 local function buildFloorSpawn(parent: Instance)
@@ -453,7 +446,7 @@ function Tower.build(onKillTouch: (BasePart) -> ())
 		local body = Instance.new("Part")
 		body.Name = "Body"
 		body.Anchored = true
-		body.CanCollide = false
+		body.CanCollide = index == 1
 		body.CanQuery = false
 		body.Size = Vector3.new(Config.FloorSize.X, Config.FloorSize.Y, Config.FloorSize.Z)
 		body.Color = color
@@ -602,7 +595,8 @@ function Tower.setActive(current: number, phase: string)
 
 		local ghost = role == "ghost"
 		local warningThis = phase == "warn" and floor.index == current
-		floor.body.Transparency = if ghost then 0.4 else 0
+		floor.body.CanCollide = role == "ground"
+		floor.body.Transparency = if ghost then 0.15 else 0
 		floor.trim.Transparency = if ghost then 0.4 else 0
 		floor.body.Material = if ghost then Enum.Material.SmoothPlastic else Enum.Material.Neon
 		floor.trim.Material = Enum.Material.Neon
